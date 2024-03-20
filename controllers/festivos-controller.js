@@ -49,17 +49,112 @@ const fechas = require('../Services/fechas');
  *                               description: Nombre del festivo.
  */
 // Primera ruta para obtener tipos de festivos
-exports.obtenerTiposFestivos = async (req, res) => {
+exports.verificarFestivo = async (req, res) => {
   try {
-    const db = await connectToDatabase(); // Establecer la conexión a la base de datos
-    const tiposFestivos = await db.collection('tipos').find({}).toArray(); // Obtener los tipos de festivos
-    res.json({ tiposFestivos }); // Enviar los tipos de festivos como respuesta
+    const { year, month, day } = req.params;
+
+    // Verificar si la fecha es válida
+    const fecha = new Date(year, month - 1, day);
+    if (isNaN(fecha) || fecha.getMonth() + 1 !== parseInt(month) || fecha.getDate() !== parseInt(day)) {
+      return res.status(400).json({ error: 'Fecha no válida' });
+    }
+
+    // Establecer la conexión a la base de datos
+    const db = await connectToDatabase();
+
+    // Obtener los festivos de la base de datos
+    const tiposFestivos = await db.collection('tipos').find({}).toArray();
+
+    // Determinar si la fecha es festiva
+    let nombreFestivo = null;
+    let nuevaFecha = null;
+
+    for (const tipo of tiposFestivos) {
+      switch (tipo.id) {
+        case 1: // Código para calcular los festivos fijos
+          for (const festivo of tipo.festivos) {
+            const festivoFecha = new Date(year, festivo.mes - 1, festivo.dia);
+            if (festivoFecha.getTime() === fecha.getTime()) {
+              nombreFestivo = festivo.nombre;
+              break;
+            }
+          }
+          break;
+        case 2: // Código para calcular los festivos de la tabla id=2
+          for (const festivo of tipo.festivos) {
+            const festivoFecha = new Date(year, festivo.mes - 1, festivo.dia);
+            if (festivoFecha.getTime() === fecha.getTime()) {
+              nombreFestivo = festivo.nombre;
+              // Si el festivo se traslada al siguiente lunes
+              if (tipo.modoCalculo === 'Se traslada la fecha al siguiente lunes') {
+                const diaSemana = festivoFecha.getDay();
+                if (diaSemana !== 1) { // Si no es lunes
+                  nuevaFecha = fechas.obtenerSiguienteLunes(festivoFecha);
+                }
+              }
+              break;
+            }
+          }
+          break;
+        case 3: // Código para calcular los festivos de la tabla id=3
+          const tiposFestivosSemanaSanta = await db.collection('tipos').findOne({ id: 3 });
+
+          if (!tiposFestivosSemanaSanta) {
+            return res.status(404).json({ error: 'No se encontraron festivos de Semana Santa en la base de datos' });
+          }
+
+          for (const festivo of tiposFestivosSemanaSanta.festivos) {
+            const fechaPascua = fechas.calcularDomingoPascua(parseInt(year));
+            const fechaFestivo = fechas.agregarDias(fechaPascua, festivo.diasPascua + 7);
+
+            if (fecha.getFullYear() === fechaFestivo.getFullYear() && fecha.getMonth() === fechaFestivo.getMonth() && fecha.getDate() === fechaFestivo.getDate()) {
+              nombreFestivo = festivo.nombre;
+              break;
+            }
+          }
+          break;
+        case 4: // Código para calcular los festivos de la tabla id=4
+          for (const festivo of tipo.festivos) {
+            const fechaPascua = fechas.calcularDomingoPascua(parseInt(year));
+            const fechaFestivo = fechas.agregarDias(fechaPascua, festivo.diasPascua + 7);
+            nuevaFecha = fechas.obtenerSiguienteLunes(fechaFestivo);
+            if (new Date(nuevaFecha).getTime() === fecha.getTime()) {
+              nombreFestivo = festivo.nombre;
+              break;
+            }
+          }
+          break;
+      }
+      if (nombreFestivo) {
+        break;
+      }
+    }
+
+    // Preparar el mensaje personalizado
+    let mensaje = '';
+    if (nombreFestivo) {
+      mensaje = `¡La fecha ${year}-${month}-${day} corresponde a un día festivo (${nombreFestivo})!`;
+    } else {
+      mensaje = `La fecha ${year}-${month}-${day} no corresponde a un día festivo.`;
+    }
+
+    // Preparar la respuesta JSON
+    const respuesta = {
+
+      Mensaje: mensaje
+    };
+
+    // Agregar la nueva fecha si se ha calculado
+    if (nombreFestivo && nuevaFecha) {
+      respuesta.NuevaFecha = nuevaFecha.toISOString().split('T')[0];
+    }
+
+    res.json(respuesta);
   } catch (error) {
-    console.error('Error al obtener los tipos de festivos:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error al verificar si es festivo:', error);
+    res.status(500).json({ error: 'Error interno del servidor', message: error.message });
   }
 };
-
 /**
  * @swagger
  *  /verificar-festivo/{year}/{month}/{day}:

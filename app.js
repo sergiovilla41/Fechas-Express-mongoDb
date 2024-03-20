@@ -11,8 +11,6 @@ connectToDatabase().then((db) => {
 
   const { swaggerUi, specs } = require('./Config/swagger'); // Importa las configuraciones de Swagger
 
-  console.log(fechas.calcularDomingoPascua(2024));
-  console.log(fechas.obtenerSiguienteLunes(fechas.agregarDias(fechas.calcularDomingoPascua(2024),47)));
   // Usa el enrutador después de que la conexión se haya establecido
   app.use(router);
   
