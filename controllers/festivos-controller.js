@@ -73,7 +73,8 @@ exports.listarFestivos = async (req, res) => {
             const festivoFecha = new Date(year, festivo.mes - 1, festivo.dia);
             // Si el festivo no cae en lunes, trasladarlo al siguiente lunes
             if (festivoFecha.getDay() !== 1) { // 1 es lunes
-              festivoFecha.setDate(festivoFecha.getDate() + (8 - festivoFecha.getDay()));
+              const diasHastaLunes = (8 - festivoFecha.getDay()) % 7;
+              festivoFecha.setDate(festivoFecha.getDate() + diasHastaLunes);
             }
             festivosEncontrados.push({
               Fecha: festivoFecha.toISOString().split('T')[0],
@@ -96,8 +97,9 @@ exports.listarFestivos = async (req, res) => {
             const fechaPascua = fechas.calcularDomingoPascua(parseInt(year));
             const fechaFestivo = fechas.agregarDias(fechaPascua, festivo.diasPascua + 7);
             const fechaNueva = fechas.obtenerSiguienteLunes(fechaFestivo);
+            const fechaFormateada = `${fechaNueva.getFullYear()}-${(fechaNueva.getMonth() + 1).toString().padStart(2, '0')}-${fechaNueva.getDate().toString().padStart(2, '0')}`;
             festivosEncontrados.push({
-              Fecha: fechaNueva,
+              Fecha: fechaFormateada,
               Nombre: festivo.nombre
             });
           }
@@ -275,7 +277,10 @@ exports.verificarFestivo = async (req, res) => {
     };
     // Agregar la nueva fecha si se ha calculado
     if (nombreFestivo && nuevaFecha) {
-      respuesta.NuevaFecha = nuevaFecha;
+      // Formatear la fecha para obtener solo la parte de la fecha (sin la hora)
+      const fechaFormateada = `${nuevaFecha.getFullYear()}-${(nuevaFecha.getMonth() + 1).toString().padStart(2, '0')}-${nuevaFecha.getDate().toString().padStart(2, '0')}`;
+
+      respuesta.NuevaFecha = fechaFormateada;
     }
     res.json(respuesta);
   } catch (error) {
