@@ -12,27 +12,9 @@ function calcularDomingoPascua(year) {
         diaDomingoRamos -= 31; // Ajustar al siguiente mes
         mesDomingoRamos = 4; // El mes es abril
     }
-
     // Devolver la fecha del Domingo de Pascua
     return new Date(year, mesDomingoRamos - 1, diaDomingoRamos);
 }
-
-// Función para calcular las fechas de la Semana Santa para un año dado
-function calcularSemanaSanta(year) {
-    const fechaPascua = calcularDomingoPascua(year);
-    const juevesSanto = new Date(fechaPascua);
-    juevesSanto.setDate(juevesSanto.getDate() + 4); // Jueves Santo es tres días antes de Pascua
-    const viernesSanto = new Date(fechaPascua);
-    viernesSanto.setDate(viernesSanto.getDate() + 5); // Viernes Santo es dos días antes de Pascua
-
-    // Devolver un objeto con las fechas relevantes de la Semana Santa
-    return {
-        juevesSanto,
-        viernesSanto,
-        fechaPascua
-    };
-}
-
 // Función para obtener la fecha del siguiente lunes a partir de una fecha dada
 function obtenerSiguienteLunes(fecha) {
     const diaSemana = fecha.getDay(); // Cambiado de getDate a getDay
@@ -40,7 +22,7 @@ function obtenerSiguienteLunes(fecha) {
     const fechaLunes = new Date(fecha); // Copiar la fecha original para no modificarla
     fechaLunes.setDate(fecha.getDate() + diasHastaLunes); // Sumar días hasta el próximo lunes
     return fechaLunes;
-  }
+}
 
 // Función para agregar un número dado de días a una fecha dada
 function agregarDias(fecha, dias) {

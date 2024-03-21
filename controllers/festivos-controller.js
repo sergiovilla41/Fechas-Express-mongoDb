@@ -106,22 +106,17 @@ exports.listarFestivos = async (req, res) => {
           break;
       }
     }
-
     // Ordenar los festivos por fecha
-    festivosEncontrados = festivosEncontrados.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
-
-    // Preparar la respuesta JSON
+    festivosEncontrados = festivosEncontrados.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));   
     const respuesta = {
       Festivos: festivosEncontrados
     };
-
     res.json(respuesta);
   } catch (error) {
     console.error('Error al listar los festivos:', error);
     res.status(500).json({ error: 'Error interno del servidor', message: error.message });
   }
 };
-
 /**
  * @swagger
  * /verificar-festivo/{year}/{month}/{day}:
@@ -175,23 +170,18 @@ exports.listarFestivos = async (req, res) => {
 exports.verificarFestivo = async (req, res) => {
   try {
     const { year, month, day } = req.params;
-
     // Verificar si la fecha es válida
     const fecha = new Date(year, month - 1, day);
     if (isNaN(fecha) || fecha.getMonth() + 1 !== parseInt(month) || fecha.getDate() !== parseInt(day)) {
       return res.status(400).json({ error: 'Fecha no válida' });
     }
-
     // Establecer la conexión a la base de datos
     const db = await connectToDatabase();
-
     // Obtener los festivos de la base de datos
     const tiposFestivos = await db.collection('tipos').find({}).toArray();
-
     // Determinar si la fecha es festiva
     let nombreFestivo = null;
     let nuevaFecha = null;
-
     for (const tipo of tiposFestivos) {
       switch (tipo.id) {
         case 1: // Código para calcular los festivos fijos
@@ -211,7 +201,6 @@ exports.verificarFestivo = async (req, res) => {
               break;
             }
           }
-
           if (nombreFestivo && tipo.modoCalculo === 'Se traslada la fecha al siguiente lunes') {
             const diaSemana = fecha.getDay();
             if (diaSemana !== 1) { // Si no es lunes
@@ -220,16 +209,13 @@ exports.verificarFestivo = async (req, res) => {
           }
           break;
         case 3: // Código para calcular los festivos de la tabla id=3
-          const tiposFestivosSemanaSanta = await db.collection('tipos').findOne({ id: 3 });
-
+          const tiposFestivosSemanaSanta = await db.collection('tipos').findOne({ id: 3 });        
           if (!tiposFestivosSemanaSanta) {
             return res.status(404).json({ error: 'No se encontraron festivos de Semana Santa en la base de datos' });
           }
-
           for (const festivo of tiposFestivosSemanaSanta.festivos) {
             const fechaPascua = fechas.calcularDomingoPascua(parseInt(year));
             const fechaFestivo = fechas.agregarDias(fechaPascua, festivo.diasPascua + 7);
-
             if (fecha.getFullYear() === fechaFestivo.getFullYear() && fecha.getMonth() === fechaFestivo.getMonth() && fecha.getDate() === fechaFestivo.getDate()) {
               nombreFestivo = festivo.nombre;
               break;
@@ -328,7 +314,6 @@ exports.obtenerInicioSemanaSanta = async (req, res) => {
     if (isNaN(year) || parseInt(year) < 1000 || parseInt(year) > 9999) {
       return res.status(400).json({ error: 'Año no válido' });
     }
-
     // Calcular la fecha de inicio de Semana Santa utilizando la función del módulo fechas
     const inicioSemanaSanta = fechas.calcularDomingoPascua(parseInt(year));
 
