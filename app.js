@@ -1,8 +1,7 @@
 const express = require('express');
 const app = express();
-const router = require('./Rutas/rutes');
-const swaggerUi = require('./Config/swagger');
-// Importa la función connectToDatabase
+const router = require('./Rutas/rutes'); 
+const { swaggerUi, specs } = require('./Config/swagger'); // Importa specs junto con swaggerUi
 const connectToDatabase = require('./Config/mongodb');
 
 // Establece la conexión a la base de datos y luego inicia el servidor Express
@@ -11,8 +10,8 @@ connectToDatabase().then((db) => {
 
   // Usa el enrutador después de que la conexión se haya establecido
   app.use(router);
-
-  // Agrega Swagger UI a tu aplicación
+  
+     // Agrega Swagger UI a tu aplicación
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
   // Inicia el servidor Express después de que la conexión se haya establecido
   const PORT = 3030;
