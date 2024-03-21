@@ -1,15 +1,57 @@
-// Rutas/rutes.js
 const express = require('express');
 const router = express.Router();
 const festivoController = require('../controllers/festivos-controller');
 const { check } = require('express-validator');
-
+/**
+ * @swagger
+ * /listar-festivos/{year}:
+ *   get:
+ *     summary: Listar festivos por año
+ *     description: Retorna una lista de festivos para el año especificado.
+ *     parameters:
+ *       - in: path
+ *         name: year
+ *         required: true
+ *         description: Año para el cual se desean listar los festivos.
+ *         schema:
+ *           type: integer
+ *           format: int32
+ *     responses:
+ *       '200':
+ *         description: Respuesta exitosa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Festivos:
+ *                   type: array
+ *                   description: Lista de festivos encontrados para el año especificado.
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       Fecha:
+ *                         type: string
+ *                         format: date
+ *                         description: Fecha del festivo en formato ISO (YYYY-MM-DD).
+ *                       Nombre:
+ *                         type: string
+ *                         description: Nombre del festivo.
+ *       '400':
+ *         description: La solicitud es inválida.
+ *       '404':
+ *         description: No se encontraron festivos para el año especificado.
+ *       '500':
+ *         description: Error interno del servidor.
+ */
+router.get('/listar-festivos/:year', festivoController.listarFestivos); // Define la ruta y el controlador para manejar la solicitud GET
 
 /**
  * @swagger
  * /verificar-festivo/{year}/{month}/{day}:
  *   get:
- *     summary: Verificar si una fecha es festiva y obtener información adicional.
+ *     summary: Verificar si una fecha es festiva
+ *     description: Verifica si la fecha especificada corresponde a un día festivo y proporciona información adicional si es necesario.
  *     parameters:
  *       - in: path
  *         name: year
@@ -17,60 +59,42 @@ const { check } = require('express-validator');
  *         description: Año de la fecha a verificar.
  *         schema:
  *           type: integer
+ *           format: int32
  *       - in: path
  *         name: month
  *         required: true
- *         description: Mes de la fecha a verificar.
+ *         description: Mes de la fecha a verificar (número entre 1 y 12).
  *         schema:
  *           type: integer
+ *           format: int32
  *       - in: path
  *         name: day
  *         required: true
- *         description: Día de la fecha a verificar.
+ *         description: Día de la fecha a verificar (número entre 1 y 31 dependiendo del mes).
  *         schema:
  *           type: integer
+ *           format: int32
  *     responses:
  *       '200':
- *         description: Información sobre la fecha proporcionada.
+ *         description: Respuesta exitosa
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 fecha:
+ *                 Mensaje:
+ *                   type: string
+ *                   description: Mensaje indicando si la fecha es festiva y el nombre del festivo si corresponde.
+ *                 NuevaFecha:
  *                   type: string
  *                   format: date
- *                   description: La fecha proporcionada.
- *                 esFestivo:
- *                   type: boolean
- *                   description: Indica si la fecha es festiva o no.
- *                 nombreFestivo:
- *                   type: string
- *                   description: El nombre del festivo si la fecha es festiva.
- *                 nuevaFecha:
- *                   type: string
- *                   format: date
- *                   description: La nueva fecha calculada si la fecha es festiva y se traslada.
+ *                   description: Si la fecha es festiva y se ha calculado una nueva fecha, se proporciona aquí en formato ISO (YYYY-MM-DD).
  *       '400':
- *         description: Fecha no válida.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: Descripción del error.
+ *         description: La solicitud es inválida (por ejemplo, si la fecha especificada es inválida).
+ *       '404':
+ *         description: No se encontraron festivos para la fecha especificada.
  *       '500':
  *         description: Error interno del servidor.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: Descripción del error.
  */
 router.get('/verificar-festivo/:year/:month/:day', [
   check('year').isInt(),
@@ -80,107 +104,35 @@ router.get('/verificar-festivo/:year/:month/:day', [
 
 /**
  * @swagger
- * /obtener-tipos-festivos:
- *   get:
- *     summary: Obtener todos los tipos de festivos.
- *     responses:
- *       '200':
- *         description: Tipos de festivos obtenidos correctamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 tiposFestivos:
- *                   type: array
- *                   description: Lista de tipos de festivos.
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                         description: ID del tipo de festivo.
- *                       id:
- *                         type: integer
- *                         description: ID del tipo de festivo.
- *                       tipo:
- *                         type: string
- *                         description: Tipo de festivo.
- *                       modoCalculo:
- *                         type: string
- *                         description: Modo de cálculo del festivo.
- *                       festivos:
- *                         type: array
- *                         description: Lista de festivos del tipo.
- *                         items:
- *                           type: object
- *                           properties:
- *                             dia:
- *                               type: integer
- *                               description: Día del festivo.
- *                             mes:
- *                               type: integer
- *                               description: Mes del festivo.
- *                             nombre:
- *                               type: string
- *                               description: Nombre del festivo.
- */
-router.get('/obtener-tipos-festivos', festivoController.obtenerTiposFestivos);
-
-/**
- * @swagger
- * tags:
- *   name: Semana Santa
- *   description: Operaciones relacionadas con la fecha de Semana Santa
- */
-
-/**
- * @swagger
  * /semana-santa/{year}:
  *   get:
- *     summary: Obtener la fecha de Semana Santa para un año específico.
- *     tags: [Semana Santa]
+ *     summary: Obtener el inicio de Semana Santa
+ *     description: Obtiene la fecha de inicio de Semana Santa para el año especificado.
  *     parameters:
  *       - in: path
  *         name: year
  *         required: true
- *         description: Año para el cual se desea obtener la fecha de Semana Santa.
+ *         description: Año para el cual se desea obtener el inicio de Semana Santa.
  *         schema:
  *           type: integer
+ *           format: int32
  *     responses:
  *       '200':
- *         description: Fecha de Semana Santa obtenida correctamente.
+ *         description: Respuesta exitosa
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 fechaSemanaSanta:
+ *                 inicioSemanaSanta:
  *                   type: string
  *                   format: date
- *                   description: La fecha de Semana Santa para el año especificado.
+ *                   description: Fecha de inicio de Semana Santa en formato ISO (YYYY-MM-DD).
  *       '400':
- *         description: Año no válido.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: Descripción del error.
+ *         description: La solicitud es inválida (por ejemplo, si el año especificado no es válido).
  *       '500':
  *         description: Error interno del servidor.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: Descripción del error.
  */
-// Ruta para obtener la fecha de Semana Santa dado un año
 router.get('/semana-santa/:year', festivoController.obtenerInicioSemanaSanta);
 
 
