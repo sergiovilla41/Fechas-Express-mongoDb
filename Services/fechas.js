@@ -30,8 +30,7 @@ function agregarDias(fecha, dias) {
     fechaObjeto.setDate(fechaObjeto.getDate() + dias);
     return fechaObjeto; // Devolver el objeto Date sin convertirlo a cadena de texto
 }
-module.exports = {
-    calcularSemanaSanta,
+module.exports = {    
     calcularDomingoPascua,
     obtenerSiguienteLunes,
     agregarDias,
